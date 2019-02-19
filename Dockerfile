@@ -1,4 +1,4 @@
-FROM nginx:1.15.3
+FROM nginx:1.15.8
 
 LABEL com.softonic.logType="nginx-json"
 
