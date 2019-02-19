@@ -2,7 +2,7 @@ FROM nginx:1.15.8
 
 LABEL com.softonic.logType="nginx-json"
 
-ENV NGINX_VERSION=1.15.3
+ENV NGINX_VERSION=1.15.8
 
 RUN apt-get update &&\
  apt-get install -y build-essential git wget libpcre3 libpcre3-dev libssl-dev zlib1g-dev
