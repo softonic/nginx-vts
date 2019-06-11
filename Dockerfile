@@ -1,8 +1,11 @@
-FROM nginx:1.16.0
+ARG VERSION=1.16.0
+FROM nginx:${VERSION}
+
+ARG VERSION
 
 LABEL com.softonic.logType="nginx-json"
 
-ENV NGINX_VERSION=1.16.0
+ENV NGINX_VERSION=${VERSION}
 
 RUN apt-get update &&\
  apt-get install -y build-essential git wget libpcre3 libpcre3-dev libssl-dev zlib1g-dev
@@ -52,7 +55,7 @@ RUN git clone git://github.com/vozlt/nginx-module-vts.git /tmp/nginx-module-vts 
  --with-stream_realip_module\
  --with-stream_ssl_module\
  --with-stream_ssl_preread_module\
- --with-cc-opt='-g -O2 -fdebug-prefix-map=/data/builder/debuild/nginx-1.16.0/debian/debuild-base/nginx-1.16.0=. -specs=/usr/share/dpkg/no-pie-compile.specs -fstack-protector-strong -Wformat -Werror=format-security -Wp,-D_FORTIFY_SOURCE=2 -fPIC'\
+ --with-cc-opt='-g -O2 -fdebug-prefix-map=/data/builder/debuild/nginx-${NGINX_VERSION}/debian/debuild-base/nginx-${NGINX_VERSION}=. -specs=/usr/share/dpkg/no-pie-compile.specs -fstack-protector-strong -Wformat -Werror=format-security -Wp,-D_FORTIFY_SOURCE=2 -fPIC'\
  --with-ld-opt='-specs=/usr/share/dpkg/no-pie-link.specs -Wl,-z,relro -Wl,-z,now -Wl,--as-needed -pie'\
  --add-module=/tmp/nginx-module-vts\
  --add-module=/tmp/headers-more-nginx-module &&\
