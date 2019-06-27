@@ -37,7 +37,8 @@ log_format json escape=json '{'
       '"vary": "$sent_http_vary"'
     '},'
     '"responseTime": "$request_time", '
-    '"upstreamTime": "$upstream_response_time"'
+    '"upstreamTime": "$upstream_response_time", '
+    '"upstreamAddr": "$upstream_addr"'
   '}'
 '}';
 
