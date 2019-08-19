@@ -1,7 +1,7 @@
 vhost_traffic_status_zone;
 
 gzip on;
-gzip_types text/html text/plain application/json;
+gzip_types text/plain application/json;
 gzip_min_length 500;
 gzip_proxied any;
 
