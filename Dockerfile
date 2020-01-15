@@ -1,9 +1,7 @@
 ARG VERSION=1.17.7
-FROM nginx:${VERSION}
+FROM nginx:${VERSION} AS builder
 
 ARG VERSION
-
-LABEL com.softonic.logType="nginx-json"
 
 ENV NGINX_VERSION=${VERSION}
 
@@ -59,7 +57,15 @@ RUN git clone git://github.com/vozlt/nginx-module-vts.git /tmp/nginx-module-vts 
  --with-ld-opt='-specs=/usr/share/dpkg/no-pie-link.specs -Wl,-z,relro -Wl,-z,now -Wl,--as-needed -pie'\
  --add-module=/tmp/nginx-module-vts\
  --add-module=/tmp/headers-more-nginx-module &&\
- make && make install
+ make &&\
+ make install
+
+FROM nginx:${VERSION} AS runtime
+
+LABEL com.softonic.logType="nginx-json"
+
+COPY --from=builder /etc/nginx /etc/nginx
+COPY --from=builder /usr/sbin/nginx /usr/sbin/nginx
 
 ADD ./rootfs/ /
 
