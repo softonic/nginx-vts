@@ -1,4 +1,4 @@
-ARG VERSION=1.17.7
+ARG VERSION=1.17.8
 FROM nginx:${VERSION} AS builder
 
 ARG VERSION
@@ -10,6 +10,8 @@ RUN apt-get update &&\
 
 RUN git clone git://github.com/vozlt/nginx-module-vts.git /tmp/nginx-module-vts &&\
  git clone git://github.com/openresty/headers-more-nginx-module /tmp/headers-more-nginx-module &&\
+ git clone git://github.com/google/ngx_brotli /tmp/ngx_brotli &&\
+ cd /tmp/ngx_brotli && git submodule update --init && cd / &&\
  wget http://nginx.org/download/nginx-${NGINX_VERSION}.tar.gz &&\
  tar -xzf nginx-${NGINX_VERSION}.tar.gz &&\
  cd nginx-${NGINX_VERSION} &&\
@@ -56,7 +58,8 @@ RUN git clone git://github.com/vozlt/nginx-module-vts.git /tmp/nginx-module-vts 
  --with-cc-opt='-g -O2 -fdebug-prefix-map=/data/builder/debuild/nginx-${NGINX_VERSION}/debian/debuild-base/nginx-${NGINX_VERSION}=. -specs=/usr/share/dpkg/no-pie-compile.specs -fstack-protector-strong -Wformat -Werror=format-security -Wp,-D_FORTIFY_SOURCE=2 -fPIC'\
  --with-ld-opt='-specs=/usr/share/dpkg/no-pie-link.specs -Wl,-z,relro -Wl,-z,now -Wl,--as-needed -pie'\
  --add-module=/tmp/nginx-module-vts\
- --add-module=/tmp/headers-more-nginx-module &&\
+ --add-module=/tmp/headers-more-nginx-module\
+ --add-module=/tmp/ngx_brotli &&\
  make &&\
  make install
 
