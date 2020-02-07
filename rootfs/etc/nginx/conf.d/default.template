@@ -10,19 +10,25 @@ gzip_types
     application/rss+xml
     application/vnd.ms-fontobject
     application/x-font-opentype
+    application/x-font-truetype
     application/x-font-ttf
     application/x-javascript
     application/x-web-app-manifest+json
     application/xhtml+xml
     application/xml
     application/xml+rss
+    font/eot
     font/opentype
+    font/otf
+    font/woff2
     image/svg+xml
+    image/vnd.microsoft.icon
     image/x-icon
     text/css
     text/javascript
     text/plain
-    text/x-component;
+    text/x-component
+    text/xml;
 gzip_min_length 50;
 gzip_buffers 16 8k;
 gzip_comp_level 9;
@@ -39,19 +45,25 @@ brotli_types
     application/rss+xml
     application/vnd.ms-fontobject
     application/x-font-opentype
+    application/x-font-truetype
     application/x-font-ttf
     application/x-javascript
     application/x-web-app-manifest+json
     application/xhtml+xml
     application/xml
     application/xml+rss
+    font/eot
     font/opentype
+    font/otf
+    font/woff2
     image/svg+xml
+    image/vnd.microsoft.icon
     image/x-icon
     text/css
     text/javascript
     text/plain
-    text/x-component;
+    text/x-component
+    text/xml;
 brotli_min_length 50;
 
 log_format json escape=json '{'
