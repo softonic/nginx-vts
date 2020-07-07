@@ -66,43 +66,6 @@ brotli_types
     text/xml;
 brotli_min_length 50;
 
-log_format json escape=json '{'
-  '"@version": "1", '
-  '"@timestamp": "$time_iso8601", '
-  '"host": "$hostname", '
-  '"type": "access", '
-  '"application": "${APPLICATION}", '
-  '"request": {'
-    '"timestamp": "$request_start_time", '
-    '"method": "$request_method", '
-    '"url": "$request_uri", '
-    '"httpVersion": "$server_protocol", '
-    '"headers": {'
-      '"accept-encoding": "$http_accept_encoding", '
-      '"accept-language": "$http_accept_language", '
-      '"accept": "$http_accept", '
-      '"content-type": "$content_type", '
-      '"content-length": "$content_length", '
-      '"host": "$host", '
-      '"x-forwarded-for": "$http_x_forwarded_for", '
-      '"user-agent": "$http_user_agent"'
-    '},'
-  '"remoteAddress": "$remote_addr"'
-  '},'
-  '"response": {'
-    '"timestamp": "$time_iso8601", '
-    '"statusCode": "$status", '
-    '"headers": {'
-      '"cache-control": "$sent_http_cache_control", '
-      '"content-type": "$sent_http_content_type", '
-      '"vary": "$sent_http_vary"'
-    '},'
-    '"responseTime": "$request_time", '
-    '"upstreamTime": "$upstream_response_time", '
-    '"upstreamAddr": "$upstream_addr"'
-  '}'
-'}';
-
 server {
   listen 127.0.0.1:8080;
 
