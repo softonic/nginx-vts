@@ -1,4 +1,4 @@
-ARG VERSION=1.17.8
+ARG VERSION=1.19.0
 FROM nginx:${VERSION} AS builder
 
 ARG VERSION
@@ -72,5 +72,5 @@ COPY --from=builder /usr/sbin/nginx /usr/sbin/nginx
 
 ADD ./rootfs/ /
 
-ENTRYPOINT ["/bin/bash", "-c", "envsubst '${APPLICATION}' < /etc/nginx/conf.d/default.template > /etc/nginx/conf.d/00-default.conf && exec nginx -g 'daemon off;'"]
+ENTRYPOINT ["/bin/bash", "-c", "cat /etc/nginx/conf.d/*.template | envsubst '${APPLICATION}' > /etc/nginx/conf.d/00-default.conf && exec nginx -g 'daemon off;'"]
 
