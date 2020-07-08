@@ -72,5 +72,5 @@ COPY --from=builder /usr/sbin/nginx /usr/sbin/nginx
 
 ADD ./rootfs/ /
 
-ENTRYPOINT ["/bin/bash", "-c", "cat /etc/nginx/conf.d/*.template > /etc/nginx/conf.d/default.template && envsubst '${APPLICATION}' < /etc/nginx/conf.d/default.template > /etc/nginx/conf.d/00-default.conf && exec nginx -g 'daemon off;'"]
+ENTRYPOINT ["/bin/bash", "-c", "cat /etc/nginx/conf.d/*.template | envsubst '${APPLICATION}' > /etc/nginx/conf.d/00-default.conf && exec nginx -g 'daemon off;'"]
 
