@@ -1,0 +1,24 @@
+#/bin/bash
+
+if [ $# -lt 1 ]
+  then
+    echo "$0 <nginx-version> <version>"
+    echo "Example: $0 1.19.1"
+    echo "Example: $0 1.19.1 1"
+    exit 1
+fi
+
+nginxVersion=$1
+imageTag=$([ -z "$2" ] && echo "$nginxVersion" || echo "$nginxVersion-$2")
+
+docker buildx create --name nginx-vts-builder --driver docker-container --bootstrap 2> /dev/null || true
+docker buildx use nginx-vts-builder
+
+docker buildx build \
+  --pull \
+  --push \
+  --build-arg VERSION=$nginxVersion \
+  .  \
+  --platform linux/arm64,linux/amd64 \
+  -t softonic/nginx-vts/$imageTag \
+  -t softonic/nginx-vts:latest
