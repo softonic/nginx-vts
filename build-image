@@ -20,5 +20,5 @@ docker buildx build \
   --build-arg VERSION=$nginxVersion \
   .  \
   --platform linux/arm64,linux/amd64 \
-  -t softonic/nginx-vts/$imageTag \
+  -t softonic/nginx-vts:$imageTag \
   -t softonic/nginx-vts:latest
