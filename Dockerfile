@@ -1,76 +1,46 @@
-ARG VERSION=1.19.1
-FROM nginx:${VERSION} AS builder
+ARG VERSION=1.30.8
+FROM nginx:${VERSION}-alpine AS builder
 
 ARG VERSION
+ARG VTS_VERSION=v0.2.7
+ARG HEADERS_MORE_VERSION=v0.42
+ARG NGX_BROTLI_COMMIT=53e0fb55f250f48fe80c0ddbf6c0f7103cdbaae1
 
-ENV NGINX_VERSION=${VERSION}
+RUN apk add --no-cache build-base git pcre2-dev openssl-dev zlib-dev linux-headers brotli-dev
 
-RUN apt-get update &&\
- apt-get install -y build-essential git wget libpcre3 libpcre3-dev libssl-dev zlib1g-dev
+RUN git clone --depth 1 --branch ${VTS_VERSION} https://github.com/vozlt/nginx-module-vts.git /tmp/nginx-module-vts \
+ && git clone --depth 1 --branch ${HEADERS_MORE_VERSION} https://github.com/openresty/headers-more-nginx-module.git /tmp/headers-more-nginx-module \
+ && git clone https://github.com/google/ngx_brotli.git /tmp/ngx_brotli \
+ && git -C /tmp/ngx_brotli checkout ${NGX_BROTLI_COMMIT}
 
-RUN git clone git://github.com/vozlt/nginx-module-vts.git /tmp/nginx-module-vts &&\
- git clone git://github.com/openresty/headers-more-nginx-module /tmp/headers-more-nginx-module &&\
- git clone git://github.com/google/ngx_brotli /tmp/ngx_brotli &&\
- cd /tmp/ngx_brotli && git submodule update --init && cd / &&\
- wget http://nginx.org/download/nginx-${NGINX_VERSION}.tar.gz &&\
- tar -xzf nginx-${NGINX_VERSION}.tar.gz &&\
- cd nginx-${NGINX_VERSION} &&\
- ./configure\
- --prefix=/etc/nginx\
- --sbin-path=/usr/sbin/nginx\
- --modules-path=/usr/lib/nginx/modules\
- --conf-path=/etc/nginx/nginx.conf\
- --error-log-path=/var/log/nginx/error.log\
- --http-log-path=/var/log/nginx/access.log\
- --pid-path=/var/run/nginx.pid\
- --lock-path=/var/run/nginx.lock\
- --http-client-body-temp-path=/var/cache/nginx/client_temp\
- --http-proxy-temp-path=/var/cache/nginx/proxy_temp\
- --http-fastcgi-temp-path=/var/cache/nginx/fastcgi_temp\
- --http-uwsgi-temp-path=/var/cache/nginx/uwsgi_temp\
- --http-scgi-temp-path=/var/cache/nginx/scgi_temp\
- --user=nginx\
- --group=nginx\
- --with-compat\
- --with-file-aio\
- --with-threads\
- --with-http_addition_module\
- --with-http_auth_request_module\
- --with-http_dav_module\
- --with-http_flv_module\
- --with-http_gunzip_module\
- --with-http_gzip_static_module\
- --with-http_mp4_module\
- --with-http_random_index_module\
- --with-http_realip_module\
- --with-http_secure_link_module\
- --with-http_slice_module\
- --with-http_ssl_module\
- --with-http_stub_status_module\
- --with-http_sub_module\
- --with-http_v2_module\
- --with-mail\
- --with-mail_ssl_module\
- --with-stream\
- --with-stream_realip_module\
- --with-stream_ssl_module\
- --with-stream_ssl_preread_module\
- --with-cc-opt='-g -O2 -fdebug-prefix-map=/data/builder/debuild/nginx-${NGINX_VERSION}/debian/debuild-base/nginx-${NGINX_VERSION}=. -specs=/usr/share/dpkg/no-pie-compile.specs -fstack-protector-strong -Wformat -Werror=format-security -Wp,-D_FORTIFY_SOURCE=2 -fPIC'\
- --with-ld-opt='-specs=/usr/share/dpkg/no-pie-link.specs -Wl,-z,relro -Wl,-z,now -Wl,--as-needed -pie'\
- --add-module=/tmp/nginx-module-vts\
- --add-module=/tmp/headers-more-nginx-module\
- --add-module=/tmp/ngx_brotli &&\
- make &&\
- make install
+# ngx_brotli only builds against its vendored brotli submodule. Pointing that path at the
+# Alpine package links the system brotli-libs instead, so the scanner sees it and apk patches it.
+RUN mkdir -p /tmp/ngx_brotli/deps/brotli/c \
+ && ln -s /usr/include /tmp/ngx_brotli/deps/brotli/c/include \
+ && ln -s /usr/lib /tmp/ngx_brotli/deps/brotli/out
 
-FROM nginx:${VERSION} AS runtime
+# Same configure arguments as the official binary, minus its dynamic modules (they are not
+# loaded and would need extra -dev packages), so paths, user and features stay identical.
+RUN wget -q https://nginx.org/download/nginx-${VERSION}.tar.gz -O /tmp/nginx.tar.gz \
+ && tar -xzf /tmp/nginx.tar.gz -C /tmp \
+ && cd /tmp/nginx-${VERSION} \
+ && CONFARGS=$(nginx -V 2>&1 | sed -n 's/^configure arguments: //p' | sed -E "s/--with-[a-z_]+=dynamic//g") \
+ && eval ./configure ${CONFARGS} \
+    --add-module=/tmp/nginx-module-vts \
+    --add-module=/tmp/headers-more-nginx-module \
+    --add-module=/tmp/ngx_brotli \
+ && make -j"$(nproc)" \
+ && make install
+
+FROM nginx:${VERSION}-alpine AS runtime
 
 LABEL com.softonic.logType="nginx-json"
 
-COPY --from=builder /etc/nginx /etc/nginx
+RUN apk add --no-cache bash brotli-libs \
+ && apk upgrade --no-cache
+
 COPY --from=builder /usr/sbin/nginx /usr/sbin/nginx
 
 ADD ./rootfs/ /
 
 ENTRYPOINT ["/bin/bash", "-c", "cat /etc/nginx/conf.d/*.template | envsubst '${APPLICATION}' > /etc/nginx/conf.d/00-default.conf && exec nginx -g 'daemon off;'"]
-
